@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10131b">
+<title>Fyzika čáry · Chceš myš?</title>
+<style>
+:root{color-scheme:dark;--bg:#10131b;--panel:#191e2a;--panel2:#222a39;--line:#30394a;--ink:#f0f3fa;--muted:#a4afc1;--cyan:#75d9e8;--violet:#b7a0ff;--pink:#ff9ccf;--lime:#c4e58a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}button,input,select{font:inherit}button{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:11px;padding:10px 13px;cursor:pointer}button:active{transform:scale(.98)}button.primary{background:var(--cyan);color:#101820;border-color:var(--cyan);font-weight:750}button.active{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset;color:var(--cyan)}button:disabled{opacity:.4;cursor:not-allowed}
+header{padding:18px 16px 12px;max-width:1100px;margin:auto}h1{font-size:clamp(23px,5vw,34px);margin:0;letter-spacing:-.04em}header p{margin:5px 0 0;color:var(--muted);font-size:13px}
+main{max-width:1100px;margin:auto;padding:0 12px 40px;display:grid;gap:12px}.tabs{display:flex;gap:7px;overflow:auto;padding:2px 0 6px}.tabs button{white-space:nowrap}.panel{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:14px;min-width:0}.panel h2{font-size:16px;margin:0 0 10px}.sub{font-size:12px;color:var(--muted);margin:-5px 0 12px}.workspace{display:grid;gap:12px}.visual{position:relative;background:#080c13;border:1px solid #293343;border-radius:14px;overflow:hidden;min-height:270px;touch-action:none}.visual canvas{display:block;width:100%;height:300px;touch-action:none}.visual .hint{position:absolute;left:12px;top:10px;color:#aab6c8;font-size:11px;pointer-events:none}.visual .clear{position:absolute;right:9px;top:8px;padding:6px 9px;font-size:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{min-width:0}.spread{justify-content:space-between}.field{display:grid;gap:5px;flex:1 1 130px}.field label,.label{font-size:12px;color:var(--muted)}select,input[type=number],input[type=text]{width:100%;background:#111722;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}input[type=range]{width:100%;accent-color:var(--cyan)}.mapping{display:grid;grid-template-columns:1fr 22px 1fr;gap:8px;align-items:end}.mapping .arrow{text-align:center;padding-bottom:10px;color:var(--cyan);font-size:20px}.keys{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px}.key{height:68px;padding:5px 2px;display:flex;flex-direction:column;justify-content:end;align-items:center;font-size:11px;background:#e9edf5;color:#18202b;border:0;border-radius:0 0 8px 8px}.key small{font-size:9px;opacity:.65}.key.black{background:#343e51;color:#fff;height:48px;border-radius:7px;justify-content:center}.key.playing{background:var(--cyan);color:#101820}.drums{display:grid;grid-template-columns:48px repeat(16,minmax(13px,1fr));gap:4px;align-items:center;overflow-x:auto}.drumname{font-size:11px;color:var(--muted)}.step{height:29px;padding:0;border-radius:6px;background:#101722;min-width:0}.step.on{background:var(--violet);border-color:var(--violet)}.step.beat{border-left:2px solid #65738a}.small{font-size:12px;color:var(--muted)}.status{color:var(--lime);font-size:12px;min-height:18px}.meter{height:8px;border-radius:9px;background:#0d121b;overflow:hidden}.meter>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width .06s}
+.presetgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.presetgrid button{text-align:left}.presetgrid b{display:block;font-size:13px}.presetgrid span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+footer{max-width:1100px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:11px}
+@media(min-width:780px){main{grid-template-columns:1.15fr .85fr;align-items:start}.workspace{grid-column:1}.side{grid-column:2;grid-row:1 / span 3}.visual canvas{height:390px}.presetgrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1>FYZIKA ČÁRY</h1><p>Zvuk · kresba · rytmus · vlastní pravidla prostoru</p></header>
+<main>
+<nav class="tabs" style="grid-column:1/-1">
+<button class="active" data-tab="studio">Kreativní studio</button><button data-tab="game">Herní pokus</button><button data-tab="about">Jak to funguje</button>
+</nav>
+<section class="workspace">
+<div class="panel">
+<div class="row spread"><h2>Živý prostor</h2><span class="small" id="modeLabel">Kresli prstem nebo myší</span></div>
+<div class="visual"><canvas id="art" aria-label="Kreslicí plocha"></canvas><span class="hint">Kresli · zavírej tvary · křiž čáry</span><button class="clear" id="clear">Vymazat</button></div>
+<div class="row" style="margin-top:10px"><button class="primary" id="mic">Zapnout mikrofon</button><button id="sound">Zapnout zvuk</button><button id="stop">Zastavit vše</button></div>
+<div class="meter" style="margin-top:10px"><i id="level"></i></div><div class="status" id="status">Zvuk zatím vypnutý. Kreslení funguje bez něj.</div>
+</div>
+<div class="panel">
+<h2>Co ovládá co?</h2><p class="sub">Vytvoř si vlastní mapování zvuku na obraz.</p>
+<div class="mapping">
+<div class="field"><label for="source">Vstup</label><select id="source"><option value="pitch">Výška tónu</option><option value="volume">Hlasitost</option><option value="duration">Délka tónu</option><option value="rhythm">Rytmus / údery</option><option value="silence">Ticho</option><option value="draw">Pohyb prstu</option></select></div>
+<div class="arrow">→</div>
+<div class="field"><label for="target">Vizuální výstup</label><select id="target"><option value="hue">Barva</option><option value="size">Velikost</option><option value="speed">Rychlost animace</option><option value="width">Tloušťka čáry</option><option value="perspective">Hloubka / perspektiva</option><option value="wave">Vlnění</option><option value="opacity">Průhlednost</option><option value="scatter">Rozpad / rozptyl</option></select></div>
+</div>
+<div class="field" style="margin-top:12px"><label for="response">Způsob reakce</label><select id="response"><option value="continuous">Plynule podle vstupu</option><option value="threshold">Až po překročení hranice</option><option value="inverse">Opačným směrem</option><option value="pulse">Pulzně / rytmicky</option></select></div>
+<div class="field" style="margin-top:12px"><label for="strength">Síla účinku <b id="strengthVal">65 %</b></label><input id="strength" type="range" min="0" max="100" value="65"></div>
+<div class="row" style="margin-top:12px"><button id="addRule" class="primary">Přidat pravidlo</button><button id="resetRules">Základní pravidla</button></div>
+<div id="rules" class="row" style="margin-top:10px"></div>
+</div>
+<div class="panel">
+<h2>Rychlé fyziky</h2><p class="sub">Přednastavené kombinace. Můžeš je dál upravovat.</p>
+<div class="presetgrid">
+<button data-preset="voice"><b>Hlasová kresba</b><span>Výška hlasu → barva, hlasitost → velikost</span></button>
+<button data-preset="drone"><b>Drone / dlouhé tóny</b><span>Délka → hloubka, výška → vlnění</span></button>
+<button data-preset="rhythm"><b>Rytmický prostor</b><span>Údery → pulz, rytmus → rozptyl</span></button>
+<button data-preset="silence"><b>Fyzika ticha</b><span>Ticho → průhlednost a zastavení</span></button>
+</div>
+</div>
+</section>
+<aside class="side" id="side">
+<div class="panel">
+<h2>Hudební klávesy</h2><p class="sub">Zahraj tón. Zvuk se zároveň promítne do obrazu.</p>
+<div class="keys" id="keys"></div>
+<div class="row" style="margin-top:10px"><button id="holdG" class="primary">Držet G · 3 s</button><button id="release">Uvolnit tón</button></div>
+<div class="small" id="noteStatus">Tóny: C4 až C5 · temperované ladění</div>
+</div>
+<div class="panel">
+<div class="row spread"><h2>Bicí mřížka</h2><button id="playDrums" class="primary">▶ Přehrát</button></div>
+<p class="sub">Zapínej kroky v mřížce. Tempo a rytmus animují prostor.</p>
+<div class="row"><div class="field"><label for="bpm">Tempo (BPM)</label><input id="bpm" type="number" min="50" max="180" value="100"></div><div class="field"><label for="swing">Swing</label><input id="swing" type="range" min="0" max="60" value="0"></div></div>
+<div class="drums" id="drums" style="margin-top:12px"></div>
+<div class="row" style="margin-top:10px"><button id="clearDrums">Vymazat rytmus</button><span class="small">16 kroků · 4 zvukové stopy</span></div>
+</div>
+<div class="panel">
+<h2>Uložit a sdílet</h2><p class="sub">Konfigurace zůstane v tomto zařízení. Exportuj ji jako JSON nebo ji načti později.</p>
+<div class="row"><button id="save">Uložit v zařízení</button><button id="export">Export JSON</button><label for="import" class="small" style="padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer">Import JSON</label><input id="import" type="file" accept="application/json" hidden></div><div class="status" id="saveStatus"></div>
+</div>
+</aside>
+<section class="panel" id="gamePanel">
+<h2>Herní pokus: Otevři prostor</h2><p class="sub">Jednoduchá výzva, která ukazuje, jak lze kreativní nástroj použít i jako hru.</p>
+<div class="row spread"><div><b id="mission">Dostaň bod ven z uzavřeného prostoru.</b><div class="small" id="missionHint">Nakresli uzavřenou smyčku a potom vytvoř průchod.</div></div><button id="newMission">Nová výzva</button></div>
+<div class="small" id="gameResult" style="margin-top:9px">Zatím bez vyhodnocení. Hra sleduje základní geometrii čar.</div>
+</section>
+<section class="panel" id="aboutPanel" hidden>
+<h2>Ovládání</h2><p>Čára se kreslí prstem nebo myší. Zvuk může přicházet z mikrofonu, hudebních kláves nebo bicí mřížky. V nastavení si vybereš, která vlastnost vstupu mění kterou vlastnost obrazu.</p><p><b>Mikrofon:</b> pro výšku tónu aplikace odhaduje základní frekvenci hlasu. Pro slova a jejich význam zatím nepoužívá rozpoznávání řeči. Vstup z mikrofonu vyžaduje povolení a HTTPS.</p><p><b>Zvuk:</b> tóny a bicí vznikají přímo v prohlížeči pomocí Web Audio API. Není potřeba žádná zvuková knihovna.</p><p><b>Soukromí:</b> mikrofonní signál se analyzuje lokálně v prohlížeči. Nikam se neodesílá.</p>
+</section>
+</main>
+<footer>Prototyp · Chceš myš? · Funguje v moderním mobilním i desktopovém prohlížeči. Pro mikrofon použij HTTPS a povol přístup.</footer>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), canvas=$('art'),ctx=canvas.getContext('2d');
+let audio=null,master=null,analyser=null,micStream=null,micData=null,micOn=false,raf=0,oscillators=[],drawings=[],drawing=null,visual={pitch:.35,volume:0,duration:0,rhythm:0,silence:0,draw:0},lastSound=0,lastPitch=0,beatPulse=0,phase=0,drumTimer=null,drumStep=0,drumOn=false,notes=[],rules=[],particles=[];
+const colors=['#75d9e8','#b7a0ff','#ff9ccf','#c4e58a','#ffd18b'];
+function resize(){let dpr=Math.min(devicePixelRatio||1,2),r=canvas.getBoundingClientRect();canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);drawScene()}
+new ResizeObserver(resize).observe(canvas);
+function ensureAudio(){if(!audio){audio=new(window.AudioContext||window.webkitAudioContext)();master=audio.createGain();master.gain.value=.25;master.connect(audio.destination)}if(audio.state==='suspended')audio.resume();return audio}
+function tone(freq=440,dur=.25,wave='sine',vol=.22){let a=ensureAudio(),o=a.createOscillator(),g=a.createGain();o.type=wave;o.frequency.value=freq;g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(vol,a.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);o.connect(g);g.connect(master);o.start();o.stop(a.currentTime+dur+.03);visual.pitch=Math.max(0,Math.min(1,(Math.log2(freq/110))/3));visual.volume=vol*3;visual.duration=dur;lastSound=performance.now();beatPulse=1;return o}
+function drum(kind){let a=ensureAudio(),t=a.currentTime;if(kind==='kick'){let o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+.13);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.17);o.connect(g);g.connect(master);o.start(t);o.stop(t+.18)}else{let n=a.createBufferSource(),b=a.createBuffer(1,a.sampleRate*.12,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=b;let f=a.createBiquadFilter();f.type=kind==='hat'?'highpass':'bandpass';f.frequency.value=kind==='hat'?7000:1800;let g=a.createGain();g.gain.setValueAtTime(kind==='hat'?.16:.35,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);n.connect(f);f.connect(g);g.connect(master);n.start(t)}visual.volume=.8;visual.rhythm=1;lastSound=performance.now();beatPulse=1}
+const noteFreq=n=>440*Math.pow(2,(n-69)/12);
+const noteNames=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+function buildKeys(){let root=$('keys');for(let n=60;n<=72;n++){let b=document.createElement('button');b.className='key'+([1,3,6,8,10].includes(n%12)?' black':'');b.innerHTML=noteNames[n%12]+'<small>'+Math.floor(n/12-1)+'</small>';b.addEventListener('pointerdown',e=>{e.preventDefault();playNote(n,b)});b.addEventListener('pointerup',()=>{});root.appendChild(b)}}
+function playNote(n,el){tone(noteFreq(n),.65,'sine',.2);if(el){el.classList.add('playing');setTimeout(()=>el.classList.remove('playing'),180)}$('noteStatus').textContent='Přehrávám '+noteNames[n%12]+Math.floor(n/12-1)+' · '+Math.round(noteFreq(n))+' Hz'}
+buildKeys();
+$('holdG').addEventListener('click',()=>{tone(noteFreq(67),3,'sine',.22);$('noteStatus').textContent='Tón G4 · 3 sekundy'});
+$('release').addEventListener('click',()=>{if(audio)audio.suspend();$('noteStatus').textContent='Zvuk pozastaven'});
+const tracks=['Kopák','Snare','Hi-hat','Clap'],pattern=tracks.map(()=>Array(16).fill(false));
+[0,8].forEach(i=>pattern[0][i]=true);[4,12].forEach(i=>pattern[1][i]=true);[0,2,4,6,8,10,12,14].forEach(i=>pattern[2][i]=true);
+function buildDrums(){let root=$('drums');root.innerHTML='';root.appendChild(document.createElement('span'));for(let i=0;i<16;i++){let s=document.createElement('span');s.className='small';s.textContent=i+1;root.appendChild(s)}tracks.forEach((name,r)=>{let l=document.createElement('span');l.className='drumname';l.textContent=name;root.appendChild(l);for(let i=0;i<16;i++){let b=document.createElement('button');b.className='step'+(pattern[r][i]?' on':'')+(i%4===0?' beat':'');b.setAttribute('aria-label',name+' krok '+(i+1));b.addEventListener('click',()=>{pattern[r][i]=!pattern[r][i];b.classList.toggle('on',pattern[r][i])});root.appendChild(b)}})}
+buildDrums();
+function drumTick(){let bpm=Math.max(50,Math.min(180,+$('bpm').value||100)),swing=+$('swing').value,interval=60000/bpm/4;tracks.forEach((_,r)=>{if(pattern[r][drumStep])drum(['kick','snare','hat','snare'][r])});let buttons=$('drums').querySelectorAll('.step');buttons.forEach((b,i)=>b.style.outline=(i%16===drumStep)?'2px solid var(--cyan)':'none');drumStep=(drumStep+1)%16;drumTimer=setTimeout(drumTick,interval*(drumStep%2?swing/100+1:1-swing/100))}
+$('playDrums').onclick=()=>{if(drumOn){clearTimeout(drumTimer);drumOn=false;$('playDrums').textContent='▶ Přehrát';$('drums').querySelectorAll('.step').forEach(b=>b.style.outline='none')}else{ensureAudio();drumOn=true;drumStep=0;$('playDrums').textContent='Ⅱ Zastavit';drumTick()}};
+$('clearDrums').onclick=()=>{pattern.forEach(row=>row.fill(false));buildDrums()};
+function resizePoint(e){let r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);let p=resizePoint(e);drawing=[p];drawings.push(drawing);visual.draw=1;drawScene()});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;let p=resizePoint(e),prev=drawing[drawing.length-1];drawing.push(p);visual.draw=Math.min(1,Math.hypot(p.x-prev.x,p.y-prev.y)/30);drawScene()});
+function endDraw(){drawing=null;visual.draw=0;checkMission()}canvas.addEventListener('pointerup',endDraw);canvas.addEventListener('pointercancel',endDraw);
+$('clear').onclick=()=>{drawings=[];drawScene();checkMission()};
+function getVal(key){let v=visual[key]||0;if(key==='silence')v=Math.max(0,Math.min(1,(performance.now()-lastSound-500)/2500));return Math.max(0,Math.min(1,v))}
+function addRule(){let r={source:$('source').value,target:$('target').value,response:$('response').value,strength:+$('strength').value};rules.push(r);renderRules()}
+function renderRules(){let root=$('rules');root.innerHTML='';rules.forEach((r,i)=>{let s=document.createElement('span');s.style.cssText='font-size:11px;padding:6px 8px;border:1px solid var(--line);border-radius:9px';s.textContent=r.source+' → '+r.target+' ';let x=document.createElement('button');x.textContent='×';x.style.cssText='padding:1px 6px;margin-left:5px';x.onclick=()=>{rules.splice(i,1);renderRules()};s.appendChild(x);root.appendChild(s)})}
+$('addRule').onclick=addRule;$('strength').oninput=()=>{$('strengthVal').textContent=$('strength').value+'%'};
+const presets={voice:[{source:'pitch',target:'hue',response:'continuous',strength:80},{source:'volume',target:'size',response:'continuous',strength:70}],drone:[{source:'duration',target:'perspective',response:'continuous',strength:80},{source:'pitch',target:'wave',response:'continuous',strength:60}],rhythm:[{source:'rhythm',target:'speed',response:'pulse',strength:85},{source:'rhythm',target:'scatter',response:'pulse',strength:50}],silence:[{source:'silence',target:'opacity',response:'continuous',strength:90},{source:'silence',target:'speed',response:'inverse',strength:80}]};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{rules=presets[b.dataset.preset].map(x=>({...x}));renderRules()});
+$('resetRules').onclick=()=>{rules=[];renderRules()};
+function mapTarget(target,val,strength,response){let x=val*(strength/100);if(response==='inverse')x=1-x;if(response==='threshold')x=x>.55?1:0;if(response==='pulse')x=(Math.sin(phase*8)+1)/2*x;return x}
+function drawScene(){let w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);let vals={hue:.52,size:.5,speed:.4,width:.5,perspective:.3,wave:.3,opacity:.8,scatter:.1};rules.forEach(r=>{let val=mapTarget(r.target,getVal(r.source),r.strength,r.response);vals[r.target]=val});let hue=190+vals.hue*160,size=12+vals.size*45,speed=.3+vals.speed*2.5,lineW=1+vals.width*8,depth=vals.perspective,opacity=.25+vals.opacity*.75,scatter=vals.scatter*24,wave=vals.wave*35;
+ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#61738d';ctx.lineWidth=1;for(let x=0;x<w;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=0;y<h;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}ctx.restore();
+let t=phase*speed;for(let i=0;i<7;i++){let y=h*.5+(i-3)*28;ctx.beginPath();for(let x=0;x<=w;x+=4){let yy=y+Math.sin(x*.012+t+i*.65)*wave+Math.sin(x*.004-t*.7)*depth*45;if(x===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy)}ctx.strokeStyle='hsla('+((hue+i*13)%360)+',85%,70%,'+(opacity*.65)+')';ctx.lineWidth=lineW*(.35+i*.12);ctx.stroke()}
+drawings.forEach((line,i)=>{if(line.length<2)return;ctx.beginPath();line.forEach((p,j)=>{let dx=(Math.random()-.5)*scatter*.012;let x=p.x+Math.sin(t+j*.04)*scatter*.18+dx,y=p.y+Math.cos(t+j*.03)*scatter*.12;if(j===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.strokeStyle='hsla('+(hue+i*25)%360+',90%,72%,'+opacity+')';ctx.lineWidth=Math.max(1,lineW*.7);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke()});
+let cx=w/2,cy=h/2;ctx.beginPath();ctx.arc(cx+Math.sin(t)*wave,cy+Math.cos(t*.8)*wave,size*(1+depth*.5),0,Math.PI*2);ctx.strokeStyle='hsla('+hue+',95%,75%,'+opacity+')';ctx.lineWidth=2+vals.width*3;ctx.stroke();ctx.beginPath();ctx.arc(cx,cy,size*.3,0,Math.PI*2);ctx.fillStyle='hsla('+(hue+70)%360+',90%,75%,'+opacity+')';ctx.fill();ctx.restore();
+}
+function animate(){phase+=.016;beatPulse*=.94;drawScene();requestAnimationFrame(animate)}animate();
+function autoCorrelate(buf,sr){let rms=0;for(let i=0;i<buf.length;i++)rms+=buf[i]*buf[i];rms=Math.sqrt(rms/buf.length);if(rms<.012)return null;let r1=0,r2=buf.length-1,th=.2;for(let i=0;i<buf.length/2;i++)if(Math.abs(buf[i])<th){r1=i;break}for(let i=1;i<buf.length/2;i++)if(Math.abs(buf[buf.length-i])<th){r2=buf.length-i;break}let b=buf.slice(r1,r2),c=new Array(b.length).fill(0);for(let lag=0;lag<b.length;lag++)for(let j=0;j<b.length-lag;j++)c[lag]+=b[j]*b[j+lag];let d=0;while(c[d]>c[d+1])d++;let max=-1,pos=-1;for(let i=d;i<c.length;i++)if(c[i]>max){max=c[i];pos=i}if(pos<=0)return null;let x1=c[pos-1],x2=c[pos],x3=c[pos+1],a=(x1+x3-2*x2)/2,bv=(x3-x1)/2,shift=a?-.5*bv/a:0;return sr/(pos+shift)}
+async function startMic(){try{ensureAudio();micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});let src=audio.createMediaStreamSource(micStream);analyser=audio.createAnalyser();analyser.fftSize=2048;src.connect(analyser);micData=new Float32Array(analyser.fftSize);micOn=true;$('mic').textContent='Vypnout mikrofon';$('status').textContent='Mikrofon aktivní. Zvuk se analyzuje pouze v tomto zařízení.';readMic()}catch(e){$('status').textContent='Mikrofon se nepodařilo spustit: '+e.message}}
+function readMic(){if(!micOn)return;analyser.getFloatTimeDomainData(micData);let rms=0;for(let i=0;i<micData.length;i++)rms+=micData[i]*micData[i];rms=Math.sqrt(rms/micData.length);visual.volume=Math.min(1,rms*5);let f=autoCorrelate(micData,audio.sampleRate);if(f&&f>65&&f<1000){visual.pitch=Math.max(0,Math.min(1,(Math.log2(f/65))/4));lastPitch=f;visual.duration=Math.min(1,visual.duration+.012);lastSound=performance.now()}else{visual.duration=Math.max(0,visual.duration-.018)}visual.silence=Math.max(0,Math.min(1,(performance.now()-lastSound-400)/1800));$('level').style.width=(visual.volume*100)+'%';requestAnimationFrame(readMic)}
+$('mic').onclick=()=>{if(micOn){micOn=false;if(micStream)micStream.getTracks().forEach(t=>t.stop());micStream=null;$('mic').textContent='Zapnout mikrofon';$('status').textContent='Mikrofon vypnutý.'}else startMic()};
+$('sound').onclick=()=>{ensureAudio();tone(440,.12);$('status').textContent='Zvukový výstup aktivní.'};
+$('stop').onclick=()=>{if(drumOn){clearTimeout(drumTimer);drumOn=false;$('playDrums').textContent='▶ Přehrát'}if(audio)audio.suspend();$('status').textContent='Přehrávání zastaveno.'};
+let missions=[['Dostaň bod ven z uzavřeného prostoru.','Nakresli uzavřenou smyčku a potom vytvoř průchod.'],['Vytvoř dvě oddělené oblasti a spoj je.','Nakresli dvě uzavřené oblasti a propoj je čárou.'],['Vytvoř cestu se třemi kříženími.','Kresli tak, aby se čáry protly alespoň třikrát.']],mi=0;
+function checkMission(){let lines=drawings.filter(l=>l.length>3);let closed=lines.some(l=>Math.hypot(l[0].x-l[l.length-1].x,l[0].y-l[l.length-1].y)<35);let msg=mi===0?(closed?'Smyčka rozpoznána. Teď vytvoř mezeru v hranici.':'Nakresli uzavřenou smyčku.'):(lines.length>=2?'Máš několik čar. Pokračuj v experimentu.':'Zatím máš jen jednu čáru.');$('gameResult').textContent=msg}
+$('newMission').onclick=()=>{mi=(mi+1)%missions.length;$('mission').textContent=missions[mi][0];$('missionHint').textContent=missions[mi][1];$('gameResult').textContent='Nová výzva. Začni kreslit.';drawings=[];drawScene()};
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('gamePanel').hidden=b.dataset.tab!=='game';$('aboutPanel').hidden=b.dataset.tab!=='about';$('side').hidden=b.dataset.tab==='about';document.querySelector('.workspace').hidden=b.dataset.tab==='about';});
+function config(){return{version:1,rules,pattern,bpm:+$('bpm').value,swing:+$('swing').value}}
+$('save').onclick=()=>{localStorage.setItem('fyzika_cary_config',JSON.stringify(config()));$('saveStatus').textContent='Uloženo v tomto prohlížeči.'};
+$('export').onclick=()=>{let blob=new Blob([JSON.stringify(config(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fyzika-cary-konfigurace.json';a.click();URL.revokeObjectURL(a.href);$('saveStatus').textContent='Konfigurace exportována.'};
+$('import').onchange=async e=>{try{let data=JSON.parse(await e.target.files[0].text());if(!Array.isArray(data.rules)||!Array.isArray(data.pattern))throw Error('Neplatná konfigurace');rules=data.rules;data.pattern.forEach((row,i)=>row.forEach((v,j)=>{if(pattern[i])pattern[i][j]=!!v}));$('bpm').value=data.bpm||100;$('swing').value=data.swing||0;renderRules();buildDrums();$('saveStatus').textContent='Konfigurace načtena.'}catch(err){$('saveStatus').textContent='Import se nezdařil: '+err.message}};
+try{let old=JSON.parse(localStorage.getItem('fyzika_cary_config')||'null');if(old){rules=old.rules||[];renderRules();if(old.pattern)old.pattern.forEach((row,i)=>row.forEach((v,j)=>{if(pattern[i])pattern[i][j]=!!v}));$('bpm').value=old.bpm||100;$('swing').value=old.swing||0;buildDrums()}}catch(e){}
+resize();})();
+</script>
+</body></html>
